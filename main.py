@@ -11,7 +11,7 @@ import random
 import copy
 import torch
 import gc
-import cPickle as pickle
+import pickle as pickle
 import torch.autograd as autograd
 import torch.nn as nn
 import torch.nn.functional as F
@@ -140,7 +140,7 @@ def recover_nbest_label(pred_variable, mask_variable, label_alphabet, word_recov
 
 def lr_decay(optimizer, epoch, decay_rate, init_lr):
     lr = init_lr/(1+decay_rate*epoch)
-    print " Learning rate is setted as:", lr
+    print(" Learning rate is setted as:", lr)
     for param_group in optimizer.param_groups:
         param_group['lr'] = lr
     return optimizer
@@ -157,7 +157,7 @@ def evaluate(data, model, name, nbest=None):
     elif name == 'raw':
         instances = data.raw_Ids
     else:
-        print "Error: wrong evaluate name,", name
+        print("Error: wrong evaluate name,", name)
     right_token = 0
     whole_token = 0
     nbest_pred_results = []
@@ -221,7 +221,7 @@ def batchify_with_label(input_batch_list, gpu, volatile_flag=False):
     feature_num = len(features[0][0])
     chars = [sent[2] for sent in input_batch_list]
     labels = [sent[3] for sent in input_batch_list]
-    word_seq_lengths = torch.LongTensor(map(len, words))
+    word_seq_lengths = torch.LongTensor(list(map(len, words)))
     max_seq_len = word_seq_lengths.max()
     word_seq_tensor = autograd.Variable(torch.zeros((batch_size, max_seq_len)), volatile =  volatile_flag).long()
     label_seq_tensor = autograd.Variable(torch.zeros((batch_size, max_seq_len)),volatile =  volatile_flag).long()
@@ -245,8 +245,8 @@ def batchify_with_label(input_batch_list, gpu, volatile_flag=False):
     ### deal with char
     # pad_chars (batch_size, max_seq_len)
     pad_chars = [chars[idx] + [[0]] * (max_seq_len-len(chars[idx])) for idx in range(len(chars))]
-    length_list = [map(len, pad_char) for pad_char in pad_chars]
-    max_word_len = max(map(max, length_list))
+    length_list = [list(map(len, pad_char)) for pad_char in pad_chars]
+    max_word_len = max(list(map(max, length_list)))
     char_seq_tensor = autograd.Variable(torch.zeros((batch_size, max_seq_len, max_word_len)), volatile =  volatile_flag).long()
     char_seq_lengths = torch.LongTensor(length_list)
     for idx, (seq, seqlen) in enumerate(zip(pad_chars, char_seq_lengths)):
@@ -274,7 +274,7 @@ def batchify_with_label(input_batch_list, gpu, volatile_flag=False):
 
 
 def train(data):
-    print "Training model..."
+    print("Training model...")
     data.show_data_summary()
     save_data_name = data.model_dir +".dset"
     data.save(save_data_name)
@@ -291,7 +291,7 @@ def train(data):
     elif data.optimizer.lower() == "adam":
         optimizer = optim.Adam(model.parameters(), lr=data.HP_lr, weight_decay=data.HP_l2)
     else:
-        print("Optimizer illegal: %s"%(data.optimizer))
+        print(("Optimizer illegal: %s"%(data.optimizer)))
         exit(0)
     best_dev = -10
     data.HP_iteration = 1
@@ -299,7 +299,7 @@ def train(data):
     for idx in range(data.HP_iteration):
         epoch_start = time.time()
         temp_start = epoch_start
-        print("Epoch: %s/%s" %(idx,data.HP_iteration))
+        print(("Epoch: %s/%s" %(idx,data.HP_iteration)))
         if data.optimizer == "SGD":
             optimizer = lr_decay(optimizer, idx, data.HP_lr_decay, data.HP_lr)
         instance_count = 0
@@ -336,7 +336,7 @@ def train(data):
                 temp_time = time.time()
                 temp_cost = temp_time - temp_start
                 temp_start = temp_time
-                print("     Instance: %s; Time: %.2fs; loss: %.4f; acc: %s/%s=%.4f"%(end, temp_cost, sample_loss, right_token, whole_token,(right_token+0.)/whole_token))
+                print(("     Instance: %s; Time: %.2fs; loss: %.4f; acc: %s/%s=%.4f"%(end, temp_cost, sample_loss, right_token, whole_token,(right_token+0.)/whole_token)))
                 sys.stdout.flush()
                 sample_loss = 0
             loss.backward()
@@ -344,10 +344,10 @@ def train(data):
             model.zero_grad()
         temp_time = time.time()
         temp_cost = temp_time - temp_start
-        print("     Instance: %s; Time: %.2fs; loss: %.4f; acc: %s/%s=%.4f"%(end, temp_cost, sample_loss, right_token, whole_token,(right_token+0.)/whole_token))       
+        print(("     Instance: %s; Time: %.2fs; loss: %.4f; acc: %s/%s=%.4f"%(end, temp_cost, sample_loss, right_token, whole_token,(right_token+0.)/whole_token)))       
         epoch_finish = time.time()
         epoch_cost = epoch_finish - epoch_start
-        print("Epoch: %s training finished. Time: %.2fs, speed: %.2fst/s,  total loss: %s"%(idx, epoch_cost, train_num/epoch_cost, total_loss))
+        print(("Epoch: %s training finished. Time: %.2fs, speed: %.2fst/s,  total loss: %s"%(idx, epoch_cost, train_num/epoch_cost, total_loss)))
         # continue
         speed, acc, p, r, f, _,_ = evaluate(data, model, "dev")
         dev_finish = time.time()
@@ -355,18 +355,18 @@ def train(data):
 
         if data.seg:
             current_score = f
-            print("Dev: time: %.2fs, speed: %.2fst/s; acc: %.4f, p: %.4f, r: %.4f, f: %.4f"%(dev_cost, speed, acc, p, r, f))
+            print(("Dev: time: %.2fs, speed: %.2fst/s; acc: %.4f, p: %.4f, r: %.4f, f: %.4f"%(dev_cost, speed, acc, p, r, f)))
         else:
             current_score = acc
-            print("Dev: time: %.2fs speed: %.2fst/s; acc: %.4f"%(dev_cost, speed, acc))
+            print(("Dev: time: %.2fs speed: %.2fst/s; acc: %.4f"%(dev_cost, speed, acc)))
 
         if current_score > best_dev:
             if data.seg:
-                print "Exceed previous best f score:", best_dev
+                print("Exceed previous best f score:", best_dev)
             else:
-                print "Exceed previous best acc score:", best_dev
+                print("Exceed previous best acc score:", best_dev)
             model_name = data.model_dir +'.'+ str(idx) + ".model"
-            print "Save current best model in file:", model_name
+            print("Save current best model in file:", model_name)
             torch.save(model.state_dict(), model_name)
             best_dev = current_score 
         # ## decode test
@@ -374,14 +374,14 @@ def train(data):
         test_finish = time.time()
         test_cost = test_finish - dev_finish
         if data.seg:
-            print("Test: time: %.2fs, speed: %.2fst/s; acc: %.4f, p: %.4f, r: %.4f, f: %.4f"%(test_cost, speed, acc, p, r, f))
+            print(("Test: time: %.2fs, speed: %.2fst/s; acc: %.4f, p: %.4f, r: %.4f, f: %.4f"%(test_cost, speed, acc, p, r, f)))
         else:
-            print("Test: time: %.2fs, speed: %.2fst/s; acc: %.4f"%(test_cost, speed, acc))
+            print(("Test: time: %.2fs, speed: %.2fst/s; acc: %.4f"%(test_cost, speed, acc)))
         gc.collect() 
 
 
 def load_model_decode(data, name):
-    print "Load Model from file: ", data.model_dir
+    print("Load Model from file: ", data.model_dir)
     model = SeqModel(data)
     ## load model need consider if the model trained in GPU and load in CPU, or vice versa
     # if not gpu:
@@ -393,15 +393,15 @@ def load_model_decode(data, name):
     #     # model = torch.load(model_dir)
     model.load_state_dict(torch.load(data.load_model_dir))
 
-    print("Decode %s data, nbest: %s ..."%(name, data.nbest))
+    print(("Decode %s data, nbest: %s ..."%(name, data.nbest)))
     start_time = time.time()
     speed, acc, p, r, f, pred_results, pred_scores = evaluate(data, model, name, data.nbest)
     end_time = time.time()
     time_cost = end_time - start_time
     if data.seg:
-        print("%s: time:%.2fs, speed:%.2fst/s; acc: %.4f, p: %.4f, r: %.4f, f: %.4f"%(name, time_cost, speed, acc, p, r, f))
+        print(("%s: time:%.2fs, speed:%.2fst/s; acc: %.4f, p: %.4f, r: %.4f, f: %.4f"%(name, time_cost, speed, acc, p, r, f)))
     else:
-        print("%s: time:%.2fs, speed:%.2fst/s; acc: %.4f"%(name, time_cost, speed, acc))
+        print(("%s: time:%.2fs, speed:%.2fst/s; acc: %.4f"%(name, time_cost, speed, acc)))
     return pred_results, pred_scores
 
 
@@ -417,7 +417,7 @@ if __name__ == '__main__':
     data.read_config(args.config)
     status = data.status.lower()
     data.HP_gpu = torch.cuda.is_available()
-    print "Seed num:",seed_num
+    print("Seed num:",seed_num)
     
     if status == 'train':
         print("MODEL: train")
@@ -431,18 +431,18 @@ if __name__ == '__main__':
         print("MODEL: decode")
         data.load(data.dset_dir)  
         data.read_config(args.config) 
-        print data.raw_dir
+        print(data.raw_dir)
         # exit(0) 
         data.show_data_summary()
         data.generate_instance('raw')
-        print("nbest: %s"%(data.nbest))
+        print(("nbest: %s"%(data.nbest)))
         decode_results, pred_scores = load_model_decode(data, 'raw')
         if data.nbest:
             data.write_nbest_decoded_results(decode_results, pred_scores, 'raw')
         else:
             data.write_decoded_results(decode_results, 'raw')
     else:
-        print "Invalid argument! Please use valid arguments! (train/test/decode)"
+        print("Invalid argument! Please use valid arguments! (train/test/decode)")
 
 
 

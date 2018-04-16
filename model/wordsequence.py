@@ -9,12 +9,12 @@ import torch.nn as nn
 import torch.nn.functional as F
 import numpy as np
 from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
-from wordrep import WordRep
+from .wordrep import WordRep
 
 class WordSequence(nn.Module):
     def __init__(self, data):
         super(WordSequence, self).__init__()
-        print("build word sequence feature extractor: %s..."%(data.word_feature_extractor))
+        print(("build word sequence feature extractor: %s..."%(data.word_feature_extractor)))
         self.gpu = data.HP_gpu
         self.use_char = data.use_char
         # self.batch_size = data.HP_batch_size
@@ -47,7 +47,7 @@ class WordSequence(nn.Module):
             # cnn_hidden = data.HP_hidden_dim
             self.word2cnn = nn.Linear(self.input_size, data.HP_hidden_dim)
             self.cnn_layer = data.HP_cnn_layer
-            print "CNN layer: ", self.cnn_layer
+            print("CNN layer: ", self.cnn_layer)
             self.cnn_list = nn.ModuleList()
             self.cnn_drop_list = nn.ModuleList()
             self.cnn_batchnorm_list = nn.ModuleList()

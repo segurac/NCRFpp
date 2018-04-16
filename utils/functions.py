@@ -5,7 +5,7 @@
 # @Last Modified time: 2018-03-29 14:48:04
 import sys
 import numpy as np
-from alphabet import Alphabet
+from .alphabet import Alphabet
 
 def normalize_word(word):
     new_word = ""
@@ -33,7 +33,7 @@ def read_instance(input_file, word_alphabet, char_alphabet, feature_alphabets, l
     for line in in_lines:
         if len(line) > 2:
             pairs = line.strip().split()
-            word = pairs[0].decode('utf-8')
+            word = pairs[0]
             if number_normalized:
                 word = normalize_word(word)
             label = pairs[-1]
@@ -109,7 +109,7 @@ def build_pretrain_embedding(embedding_path, word_alphabet, embedd_dim=100, norm
             pretrain_emb[index,:] = np.random.uniform(-scale, scale, [1, embedd_dim])
             not_match += 1
     pretrained_size = len(embedd_dict)
-    print("Embedding:\n     pretrain word:%s, prefect match:%s, case_match:%s, oov:%s, oov%%:%s"%(pretrained_size, perfect_match, case_match, not_match, (not_match+0.)/alphabet_size))
+    print(("Embedding:\n     pretrain word:%s, prefect match:%s, case_match:%s, oov:%s, oov%%:%s"%(pretrained_size, perfect_match, case_match, not_match, (not_match+0.)/alphabet_size)))
     return pretrain_emb, embedd_dim
        
 def norm2one(vec):
@@ -131,10 +131,10 @@ def load_pretrain_emb(embedding_path):
                 assert (embedd_dim + 1 == len(tokens))
             embedd = np.empty([1, embedd_dim])
             embedd[:] = tokens[1:]
-            embedd_dict[tokens[0].decode('utf-8')] = embedd
+            embedd_dict[tokens[0]] = embedd
     return embedd_dict, embedd_dim
 
 if __name__ == '__main__':
     a = np.arange(9.0)
-    print a
-    print norm2one(a)
+    print(a)
+    print(norm2one(a))
